@@ -1,21 +1,30 @@
-use std::alloc::{GlobalAlloc, Layout};
+use libc_print::libc_println;
+use std::alloc::{GlobalAlloc, Layout, System};
 use std::panic::Location;
 
-pub struct TracedAlloc<Inner: GlobalAlloc> {
-    pub allocator: Inner
+pub struct TracedAlloc<T: GlobalAlloc> {
+    pub allocator: T,
 }
 
-unsafe impl<T> GlobalAlloc for TracedAlloc<T> where T: GlobalAlloc {
+impl TracedAlloc<System> {
+    pub const fn new() -> Self {
+        Self { allocator: System }
+    }
+}
+
+unsafe impl<T> GlobalAlloc for TracedAlloc<T>
+where
+    T: GlobalAlloc,
+{
     #[track_caller]
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        println!("Alloc {:?} at {:?}", Location::caller(), layout);
-        self.allocator.alloc(layout) 
+        libc_println!("Alloc {:?} at {:?}", layout, Location::caller());
+        self.allocator.alloc(layout)
     }
 
     #[track_caller]
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        print!("Dealloc {:?} at {:?}", Location::caller(), layout);
+        libc_println!("Dealloc {:?} at {:?}", layout, Location::caller());
         self.allocator.dealloc(ptr, layout)
     }
 }
-

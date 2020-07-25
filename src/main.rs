@@ -2,7 +2,7 @@ use std::alloc::System;
 use traced_allocator::TracedAlloc;
 
 #[global_allocator]
-static A: TracedAlloc<System> = TracedAlloc { allocator: System };
+static GLOBAL: TracedAlloc<System> = TracedAlloc::new();
 
 fn main() {
     println!("Creating vec");
